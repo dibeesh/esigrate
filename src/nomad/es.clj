@@ -88,6 +88,7 @@
   ;get all types
   ;for all create the mapping first
   ;then reindex
+  (log/infof "Start Migrating for dsl  %s..." dsl)
   (let [src-mappings (get-src-index-mappings dsl)
         src-types (keys src-mappings)]
     (for [type src-types]

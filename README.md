@@ -6,19 +6,27 @@ A Clojure library designed to Migrate/Copy ElasticSearch indexes
 
 Post a json based structure similar to the following edn to start migration:
 
+curl -x POST -d '
+
     {
-        :migration-id "001"
-        :src          {
-            :url   "http://localhost:9200/"
-            :index "index1"
-        }
-        :dest         {
-            :url   "http://localhost:9200/"
-            :index "index2"
+        "id" :"001",
+        "src": {
+            "url":   "http://localhost:9200/",
+            "index" :"index1"
+        },
+        "dest" :        {
+            "url":   "http://localhost:9200/",
+            "index": "index2"
         }
     }
+'
 
 
+Check status:
+
+    curl http://localhost:8080/migration/{id}
+
+possible responses can be queued,running,stopped
 
 ## Usage
 

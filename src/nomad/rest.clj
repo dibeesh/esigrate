@@ -1,12 +1,16 @@
 (ns nomad.rest
-  (:use org.httpkit.server)
+  (:use org.httpkit.server
+        nomad.status)
   (:require [compojure.core :refer [GET POST PUT DELETE defroutes routes]]
             [compojure.handler :as handler]
             [nomad.env :as env]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
+            [nomad.es :as es]
             )
   )
+
+
 
 (defroutes migration-routes
            (POST ["/migration"] req
@@ -15,6 +19,7 @@
                  (with-channel req channel
                                (let [body (String. (.bytes (:body req)))
                                      parsed (json/read-str body :key-fn keyword)]
+                                 (put-dsl-to-queue! parsed)
                                  (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:ok "migration started"}})
                                  )
                                )
@@ -24,7 +29,7 @@
                 (with-channel req channel
                               (let [id (:id (:params req))
                                     response {:ok "migration ongoing"}]
-                                (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body response})
+                                (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:response (get-status id)}})
                                 )
                               )
                 )
