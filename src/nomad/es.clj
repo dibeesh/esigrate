@@ -5,7 +5,9 @@
     [clojurewerkz.elastisch.query :as q]
     [clojurewerkz.elastisch.rest.bulk :as bulk]
     [clojurewerkz.elastisch.rest.index :as idx]
-    [clojure.tools.logging :as log]))
+    [clojure.tools.logging :as log])
+  (:use nomad.common
+        nomad.upgrade))
 
 
 ;
@@ -99,19 +101,24 @@
           (let [src-cli (esr/connect (-> dsl :src :url))
                 all-settings (binding [clojurewerkz.elastisch.rest/*endpoint* src-cli]
                                (idx/get-settings (-> dsl :src :index)))
-                src-settings (:settings  ((keyword (-> dsl :src :index)) all-settings))
+                src-settings (:settings ((keyword (-> dsl :src :index)) all-settings))
                 safe-settings (dissoc src-settings :index.routing.allocation.include.tag :index.uuid :index.number_of_replicas)]
             (log/infof "SRC Settings %s" safe-settings)
             (idx/create (-> dsl :dest :index) :settings safe-settings)
             )
           )
         (log/infof "Updating Mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type src-mapping)
-        (idx/update-mapping (-> dsl :dest :index) type :mappings src-mapping)
+        (if (mapping-needs-upgrade? src-mapping)
+          (let [up-mapping  (upgrade-type src-mapping)]
+            (log/infof "Upgraded mapping because it contained multi type")
+            (idx/update-mapping (-> dsl :dest :index) type :mappings up-mapping)
+            )
+          (idx/update-mapping (-> dsl :dest :index) type :mappings src-mapping)
+          )
         (log/infof "Start Reindexing source type %s..." type)
         (reindex-single-type! dsl (name type))
         (log/infof "Reindexing of source type %s... finished" type)
         )
       )
     )
-
   )

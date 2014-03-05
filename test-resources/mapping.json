@@ -1,0 +1,48 @@
+{
+    "users": {
+        "www_rcmmndr_com_9d39": {
+            "_all": {
+                "enabled": false
+            },
+            "properties": {
+                "text": {
+                    "type": "multi_field",
+                    "fields": {
+                        "text": {
+                            "type": "string"
+                        },
+                        "autocomplete": {
+                            "type": "string",
+                            "term_vector": "with_positions_offsets",
+                            "index_analyzer": "autocomplete",
+                            "include_in_all": false
+                        }
+                    }
+                },
+                "title": {
+                    "type": "multi_field",
+                    "fields": {
+                        "title": {
+                            "type": "string"
+                        },
+                        "autocomplete": {
+                            "type": "string",
+                            "boost": 2.0,
+                            "term_vector": "with_positions_offsets",
+                            "index_analyzer": "autocomplete",
+                            "include_in_all": false
+                        }
+                    }
+                },
+                "url": {
+                    "type": "string",
+                    "index": "not_analyzed",
+                    "norms": {
+                        "enabled": false
+                    },
+                    "index_options": "docs"
+                }
+            }
+        }
+    }
+}
