@@ -1,8 +1,6 @@
 # nomad
 
-A Clojure library designed to Migrate/Copy ElasticSearch indexes
-
-
+A Clojure library designed to Migrate/Copy pre 1.0 ElasticSearch indexes to latest version
 
 Post a json based structure similar to the following edn to start migration:
 
@@ -15,7 +13,7 @@ curl -x POST -d '
             "index" :"index1"
         },
         "dest" :        {
-            "url":   "http://localhost:9200/",
+            "url":   "http://newhost:9200/",
             "index": "index2"
         }
     }
@@ -28,12 +26,9 @@ Check status:
 
 possible responses can be queued,running,stopped
 
-## Behabiour
+## Behaviour
 
 - wont index anything if src type is not successfully migrated to destination
-
-## Todo
-        types-exists
 
 FIXME
 
