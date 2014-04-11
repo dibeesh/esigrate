@@ -6,9 +6,7 @@
             [nomad.env :as env]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log]
-            [nomad.es :as es]
-            )
-  )
+            [nomad.es :as es]))
 
 
 
@@ -20,33 +18,23 @@
                                (let [body (String. (.bytes (:body req)))
                                      parsed (json/read-str body :key-fn keyword)]
                                  (put-dsl-to-queue! parsed)
-                                 (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:ok "migration started"}})
-                                 )
-                               )
-                 )
+                                 (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:ok "migration started"}}))))
            (GET ["/migration/:id"] req
                 ;return the status about the migration with the specified id
                 (with-channel req channel
                               (let [id (:id (:params req))
                                     response {:ok "migration ongoing"}]
-                                (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:response (get-status id)}})
-                                )
-                              )
-                )
-           )
+                                (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:response (get-status id)}})))))
 
 
 (def app
   (->
     (routes migration-routes)
-    handler/api
-    ))
+    handler/api))
 
 (defn init-rest-server! []
   (let [port (:rest-port env/props)
         opts {:port port}]
     (run-server app opts)
-    (log/infof "Rest server started at port : %s" port)
-    )
-  )
+    (log/infof "Rest server started at port : %s" port)))
 

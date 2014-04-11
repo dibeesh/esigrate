@@ -39,8 +39,4 @@
       (let [dsl (<! queue)]
         (start-progress dsl)
         (dorun (es/exec-reindex-for-all-types! dsl))
-        (stop-progress dsl)
-        )
-      )
-    )
-  )
+        (stop-progress dsl)))))

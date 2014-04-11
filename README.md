@@ -30,6 +30,9 @@ possible responses can be queued,running,stopped
 
 ## Usage
 
+## Todo
+        types-exists
+
 FIXME
 
 ## License

@@ -48,8 +48,8 @@
                     )
                   )
         dest-cli (esr/connect (-> dsl :dest :url))]
-    (log/infof "First %s" (first src-seq))
-    (log/infof "Countted: %s" (count src-seq))
+    (log/debugf "First %s" (first src-seq))
+    (log/debugf "Countted: %s" (count src-seq))
     (if-not (nil? (first src-seq))
       (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
         (let [ops (bulk/bulk-index (map #(assoc
@@ -59,11 +59,7 @@
                                         src-seq))]
           (bulk/bulk-with-index-and-type (-> dsl :dest :index) type ops)
           ;(map #(println (-> % :_source :_source :_source :_source :_source)) src-seq)
-          )
-        )
-      )
-    )
-  )
+          )))))
 
 
 (defn get-src-index-mappings [dsl]
@@ -74,17 +70,11 @@
         (if (contains? index-mapping :mappings)
           ;v1 and legacy difference
           (:mappings index-mapping)
-          index-mapping
-          )
-        )
-      )
-    )
-  )
+          index-mapping)))))
 
 
 (defn get-src-type-mapping [dsl type]
-  (get (get-src-index-mappings dsl) (keyword type))
-  )
+  (get (get-src-index-mappings dsl) (keyword type)))
 
 (defn exec-reindex-for-all-types! [dsl]
   ;get all types
@@ -97,28 +87,28 @@
       (let [src-mapping (get src-mappings type)]
         (log/infof "Start Migrating source type %s..." type)
         (log/infof "Creating destination index  %s if it does not exist" (-> dsl :dest :index))
-        (if-not (idx/exists? (-> dsl :dest :index))
+        (when-not (idx/exists? (-> dsl :dest :index))
           (let [src-cli (esr/connect (-> dsl :src :url))
                 all-settings (binding [clojurewerkz.elastisch.rest/*endpoint* src-cli]
                                (idx/get-settings (-> dsl :src :index)))
                 src-settings (:settings ((keyword (-> dsl :src :index)) all-settings))
                 safe-settings (dissoc src-settings :index.routing.allocation.include.tag :index.uuid :index.number_of_replicas)]
             (log/infof "SRC Settings %s" safe-settings)
-            (idx/create (-> dsl :dest :index) :settings safe-settings)
-            )
-          )
+            (idx/create (-> dsl :dest :index) :settings safe-settings)))
         (log/infof "Updating Mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type src-mapping)
         (if (mapping-needs-upgrade? src-mapping)
+          ;;type needs upgrade, change dsl manually and push the new one
           (let [up-mapping  (upgrade-type src-mapping)]
-            (log/infof "Upgraded mapping because it contained multi type")
-            (idx/update-mapping (-> dsl :dest :index) type :mappings up-mapping)
-            )
-          (idx/update-mapping (-> dsl :dest :index) type :mappings src-mapping)
-          )
-        (log/infof "Start Reindexing source type %s..." type)
-        (reindex-single-type! dsl (name type))
-        (log/infof "Reindexing of source type %s... finished" type)
-        )
-      )
-    )
-  )
+            (log/infof "Upgraded mapping because it contained multi type, Url %s type %s new-mapping %s"
+                       (-> dsl :dest :index) type {(keyword type) up-mapping})
+            (let [upgrade-result (idx/update-mapping (-> dsl :dest :index) type :mappings
+                                                     {(keyword type) up-mapping})]
+              (log/infof "UPGRADE RESULT %s " upgrade-result)))
+          ;;does not need upgrade, copy the type without modifications
+          (let [upgrade-result (idx/update-mapping (-> dsl :dest :index) type :mappings
+                                                   {(keyword type) src-mapping})]
+            (log/infof "UPGRADE RESULT %s " upgrade-result)))
+        (when (idx/type-exists? (-> dsl :dest :index) type)
+          (log/infof "Start Reindexing source type %s..." type)
+          (reindex-single-type! dsl (name type))
+          (log/infof "Reindexing of source type %s... finished" type))))))
