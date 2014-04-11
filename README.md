@@ -28,7 +28,9 @@ Check status:
 
 possible responses can be queued,running,stopped
 
-## Usage
+## Behabiour
+
+- wont index anything if src type is not successfully migrated to destination
 
 ## Todo
         types-exists

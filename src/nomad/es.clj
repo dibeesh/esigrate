@@ -100,15 +100,18 @@
           ;;type needs upgrade, change dsl manually and push the new one
           (let [up-mapping  (upgrade-type src-mapping)]
             (log/infof "Upgraded mapping because it contained multi type, Url %s type %s new-mapping %s"
-                       (-> dsl :dest :index) type {(keyword type) up-mapping})
-            (let [upgrade-result (idx/update-mapping (-> dsl :dest :index) type :mappings
-                                                     {(keyword type) up-mapping})]
+                       (-> dsl :dest :index) (name type) {(keyword type) up-mapping})
+            (let [upgrade-result (idx/update-mapping (-> dsl :dest :index)
+                                                     (name type)
+                                                     :mapping
+                                                     {(keyword type) up-mapping}
+                                                     :ignore_conflicts false)]
               (log/infof "UPGRADE RESULT %s " upgrade-result)))
           ;;does not need upgrade, copy the type without modifications
-          (let [upgrade-result (idx/update-mapping (-> dsl :dest :index) type :mappings
-                                                   {(keyword type) src-mapping})]
+          (let [upgrade-result (idx/update-mapping (-> dsl :dest :index) (name type) :mapping
+                                                   {(keyword type) src-mapping} :ignore_conflicts false)]
             (log/infof "UPGRADE RESULT %s " upgrade-result)))
-        (when (idx/type-exists? (-> dsl :dest :index) type)
+        (when (idx/type-exists? (-> dsl :dest :index) (name type))
           (log/infof "Start Reindexing source type %s..." type)
           (reindex-single-type! dsl (name type))
           (log/infof "Reindexing of source type %s... finished" type))))))
