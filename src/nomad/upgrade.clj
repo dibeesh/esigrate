@@ -32,7 +32,7 @@
   "gets an old mapping with multi_fields and return an updated one"
   ;remove multi_field
   ;remove redundant reference
-  (log/infof "get-upgraded-properties %s" type-root)
+  (log/debugf "get-upgraded-properties %s" type-root)
   (let [properties (find-first-key type-root :properties)
         fields (keys properties)
         modified-fields (into [] (map #(upgrade-single-mfield-type (find-first-key type-root %) %) fields))]
@@ -42,12 +42,12 @@
 
 ;;for all types upgrade the properties and collect
 (defn upgrade-type [type-root]
-  (log/infof "upgrade-type %s" type-root)
+  (log/debugf "upgrade-type %s" type-root)
   (let [upgraded-properties (get-upgraded-properties type-root)]
     (assoc type-root :properties upgraded-properties)))
 
 (defn upgrade-all-types [mapping index-name]
-  (log/infof "upgrade-all-types mapping: %s index-name %s" mapping index-name)
+  (log/debugf "upgrade-all-types mapping: %s index-name %s" mapping index-name)
   (let [types (keys (first (vals mapping)))
         upgraded-types (into [] (map #(upgrade-type (find-first-key mapping %)) types))]
     {(keyword index-name) (zipmap types upgraded-types)}))
