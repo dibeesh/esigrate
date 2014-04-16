@@ -32,6 +32,9 @@ possible responses can be queued,running,stopped
 
 FIXME
 
+##TODO
+- percolator
+- alias
 ## License
 
 Copyright © 2014 FIXME
