@@ -95,14 +95,14 @@
         (log/infof "Creating destination index  %s if it does not exist" (-> dsl :dest :index))
         (log/infof "UNSAFE Settings %s" src-settings)
         (log/infof "SAFE Settings %s" safe-settings)
-        (when-not (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli] (idx/exists? (-> dsl :dest :index)))
-          (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli] (idx/create (-> dsl :dest :index) :settings safe-settings)))
+        (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
+          (when-not (idx/exists? (-> dsl :dest :index))
+            (idx/create (-> dsl :dest :index) :settings safe-settings))
 
-        (log/infof "Updating Mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type src-mapping)
-        (if (mapping-needs-upgrade? src-mapping)
-          ;;type needs upgrade, change dsl manually and push the new one
-          (let [up-mapping (upgrade-type src-mapping)]
-            (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
+          (log/infof "Updating Mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type src-mapping)
+          (if (mapping-needs-upgrade? src-mapping)
+            ;;type needs upgrade, change dsl manually and push the new one
+            (let [up-mapping (upgrade-type src-mapping)]
               (log/infof "Upgraded mapping because it contained multi type, Url %s type %s new-mapping %s"
                          (-> dsl :dest :index) (name type) {(keyword type) up-mapping})
               (let [upgrade-result (idx/update-mapping (-> dsl :dest :index)
@@ -110,15 +110,15 @@
                                                        :mapping
                                                        {(keyword type) up-mapping}
                                                        :ignore_conflicts false)]
-                (log/infof "UPGRADE RESULT %s " upgrade-result))))
-          ;;does not need upgrade, copy the type without modifications
-          (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
+                (log/infof "UPGRADE RESULT %s " upgrade-result)))
+            ;;does not need upgrade, copy the type without modifications
             (let [upgrade-result (idx/update-mapping (-> dsl :dest :index) (name type) :mapping
                                                      {(keyword type) src-mapping} :ignore_conflicts false)]
               (log/infof "UPGRADE RESULT %s " upgrade-result)))
-          )
 
-        (when (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli] (idx/type-exists? (-> dsl :dest :index) (name type)))
-          (log/infof "Start Reindexing source type %s..." type)
-          (reindex-single-type! dsl (name type))
-          (log/infof "Reindexing of source type %s... finished" type))))))
+
+          (when
+              (idx/type-exists? (-> dsl :dest :index) (name type))
+            (log/infof "Start Reindexing source type %s..." type)
+            (reindex-single-type! dsl (name type))
+            (log/infof "Reindexing of source type %s... finished" type)))))))
