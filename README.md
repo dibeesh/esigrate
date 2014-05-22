@@ -1,23 +1,32 @@
 # nomad
 
-A Clojure library designed to Migrate/Copy pre 1.0 ElasticSearch indexes to latest version
+A Clojure application designed to Migrate/Copy pre 1.0 ElasticSearch indexes to latest version
 
 Post a json based structure similar to the following edn to start migration:
 
-curl -x POST -d '
+##Usage
 
-    {
-        "id" :"001",
-        "src": {
-            "url":   "http://localhost:9200/",
-            "index" :"index1"
-        },
-        "dest" :        {
-            "url":   "http://newhost:9200/",
-            "index": "index2"
-        }
-    }
-'
+    git clone https://github.com/codemomentum/nomad.git
+    cd nomad
+    lein run
+
+you should now see a message like:
+
+    INFO: Rest server started at port : 8080
+
+now you can start a migration like the following:
+
+    curl -XPOST http://localhost:8080/migration -d '{
+            "id" :"001",
+            "src": {
+                "url":   "http://localhost:9200/",
+                "index" :"index1"
+            },
+            "dest" :        {
+                "url":   "http://newhost:9200/",
+                "index": "index2"
+            }
+        }'
 
 
 Check status:
@@ -30,11 +39,12 @@ possible responses can be queued,running,stopped
 
 - wont index anything if src type is not successfully migrated to destination
 
-FIXME
 
 ##TODO
 - percolator
 - alias
+- parent/child
+
 ## License
 
 Copyright © 2014 FIXME
