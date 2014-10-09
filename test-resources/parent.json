@@ -1,0 +1,11 @@
+{
+    "id": "001",
+    "src": {
+        "url": "http://api.searchbox.io/api-key/1ea4feb23a03d9db446e51cb37985df2/",
+        "index": "denemepc"
+    },
+    "dest": {
+        "url": "http://localhost:9200/",
+        "index": "denemepc"
+    }
+}

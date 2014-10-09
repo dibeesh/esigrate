@@ -30,3 +30,6 @@
           (dissoc m k)))
       m)
     (dissoc m k)))
+
+(defmacro <> [stmnt]
+  (try stmnt (catch Throwable t (.printStackTrace t))))
