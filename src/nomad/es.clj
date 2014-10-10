@@ -59,17 +59,14 @@
                                           :_parent
                                           (->> (get-v1-document %)
                                                :fields
-                                               :_parent))
+                                               :_parent)
+                                          :_routing
+                                          (->> (get-v1-document %)
+                                               :fields
+                                               :_routing))
                                         src-seq))]
           (log/infof "First BULK OP to execute %s" (first ops))
-          ;(with-redefs-fn {#'clojurewerkz.elastisch.rest/post-string
-          ;                  (fn [^String uri & {:keys [body] :as options}]
-          ;                    (io! (cheshire.core/decode (:body (clj-http.client/post uri (merge options {:accept :json :body body :throw-entire-message? true}))) true)))}
-          ;                #(bulk/bulk-with-index-and-type (-> dsl :dest :index) type ops)
-          ;                )
-          (bulk/bulk-with-index-and-type (-> dsl :dest :index) type ops)
-          ;(map #(println (-> % :_source :_source :_source :_source :_source)) src-seq)
-          )))))
+          (bulk/bulk-with-index-and-type (-> dsl :dest :index) type ops))))))
 
 
 (defn get-src-index-mappings [dsl]
