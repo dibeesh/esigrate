@@ -43,7 +43,8 @@ possible responses can be queued,running,stopped
 ##TODO
 - percolator
 - alias
-~~- parent/child~~
+
+~~parent/child~~
 
 ## License
 
