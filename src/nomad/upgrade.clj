@@ -13,10 +13,10 @@
   http://www.elasticsearch.org/guide/en/elasticsearch/reference/1.x/_multi_fields.html
   "
   (if (= "multi_field" (:type root))
-    (let [actual-type (get-in root [:fields field :type])
+    (let [actual-type (get-in root [:fields field])
           ;put it to top
-          root1 (assoc root :type actual-type)
-          root2 (dissoc-in root1 [:fields field :type])
+          root1 (merge root actual-type)
+          root2 (dissoc-in root1 [:fields field])
           ]
 
       ;(log/infof "Field %s" field)
