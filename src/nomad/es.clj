@@ -5,7 +5,8 @@
     [clojurewerkz.elastisch.query :as q]
     [clojurewerkz.elastisch.rest.bulk :as bulk]
     [clojurewerkz.elastisch.rest.index :as idx]
-    [clojure.tools.logging :as log] :reload-all)
+    [clojure.tools.logging :as log]
+    :reload-all)
   (:use nomad.common
         nomad.upgrade :reload-all))
 
@@ -48,12 +49,12 @@
                     )
                   )
         dest-cli (esr/connect (-> dsl :dest :url))]
-    (log/infof "First Doc to migrate %s" (first src-seq))
+    (log/infof "First Doc to migrate %s" (:_source (first src-seq)))
     (log/debugf "Countted: %s" (count src-seq))
     (if-not (nil? (first src-seq))
       (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
         (let [ops (bulk/bulk-index (map #(assoc
-                                            (:_source (get-v1-document %))
+                                          (:_source (get-v1-document %))
                                           :_id
                                           (:_id (get-v1-document %))
                                           :_parent
@@ -96,7 +97,7 @@
             all-settings (binding [clojurewerkz.elastisch.rest/*endpoint* src-cli]
                            (idx/get-settings (-> dsl :src :index)))
             src-settings (:settings ((keyword (-> dsl :src :index)) all-settings))
-            safe-settings (dissoc src-settings :index.routing.allocation.include.tag :index.uuid :index.number_of_replicas)
+            safe-settings (dissoc src-settings :index.routing.allocation.include.tag :index.uuid :index.number_of_replicas :index.number_of_shards :index.version.created)
             dest-cli (esr/connect (-> dsl :dest :url))]
         (log/infof "Start Migrating source type %s..." type)
         (log/infof "Creating destination index  %s if it does not exist" (-> dsl :dest :index))
@@ -104,7 +105,7 @@
         (log/infof "SAFE Settings %s" safe-settings)
         (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
           (when-not (idx/exists? (-> dsl :dest :index))
-            (idx/create (-> dsl :dest :index) :settings safe-settings))
+            (idx/create (-> dsl :dest :index) :settings (deep-keywordize-keys safe-settings)))
 
           (log/infof "Updating Mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type src-mapping)
           (if (mapping-needs-upgrade? src-mapping)
@@ -125,7 +126,7 @@
 
 
           (when
-              (idx/type-exists? (-> dsl :dest :index) (name type))
+            (idx/type-exists? (-> dsl :dest :index) (name type))
             (log/infof "Start Reindexing source type %s..." type)
             (reindex-single-type! dsl (name type))
             (log/infof "Reindexing of source type %s... finished" type)))))))

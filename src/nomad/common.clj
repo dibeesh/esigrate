@@ -33,3 +33,16 @@
 
 (defmacro <> [stmnt]
   (try stmnt (catch Throwable t (.printStackTrace t))))
+
+
+(defn- deep-merge [& maps]
+  (if (every? map? maps)
+    (apply merge-with deep-merge maps)
+    (last maps)))
+
+(defn- str-keys-to-map [[k v]]
+  (let [ks (map keyword (filter not-empty (clojure.string/split (name k)  #"[\.]")))]
+    (when-not (empty? ks) (assoc-in {} ks v))))
+
+(defn deep-keywordize-keys [m]
+  (->> m (map str-keys-to-map) (apply deep-merge)))
