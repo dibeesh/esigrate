@@ -20,7 +20,7 @@
 
 
                   ;;es related
-                  [clojurewerkz/elastisch "2.0.0-beta4"]
+                  [clojurewerkz/elastisch "2.1.0-rc1"]
 
                   ]
   :resource-paths ["resources" "test-resources"]
