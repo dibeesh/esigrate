@@ -26,7 +26,7 @@
   :resource-paths ["resources" "test-resources"]
   :min-lein-version "2.0.0"
   :global-vars {*warn-on-reflection* true}
-  :jvm-opts ["-Xmx1g" "-server"]
+  :jvm-opts ["-Xmx2g" "-server"]
   :aot [nomad.core] :main nomad.core
 
   )

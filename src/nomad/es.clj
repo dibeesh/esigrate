@@ -24,21 +24,36 @@
   [response]
   (get-in response [:hits :hits]))
 
-;(defn fetch-scroll-results
-;  [src-cli scroll-id results]
-;
-;  (let [scroll-id (:_scroll_id response)
-;        next-page (doc/scroll conn scroll-id :scroll "1m")]
-;    (hits-from next-page))
-;
-;
-;  (let [scroll-response (doc/scroll src-cli scroll-id :scroll "1m")
-;        hits (hits-from scroll-response)]
-;    (if (seq hits)
-;      (recur (:_scroll_id scroll-response) (concat results hits))
-;      (concat results hits)))
-;
-;  )
+; Executes scroll and bulk
+(defn execute-bulk-with-scroll
+  [query-dsl src-cli dest-cli  scroll-id type]
+  (log/infof "Recurr called")
+  (let [response (doc/scroll src-cli scroll-id :scroll "1m")
+        initial-hits (hits-from response)
+        scroll-id (:_scroll_id response)
+        ]
+    (log/infof "Recur first Doc to migrate  %s" (:_source (first initial-hits)))
+    (if-not (nil? (first initial-hits))
+      (let [ops (bulk/bulk-index (map #(assoc
+                                        (:_source (get-v1-document %))
+                                        :_id
+                                        (:_id (get-v1-document %))
+                                        :_parent
+                                        (->> (get-v1-document %)
+                                             :fields
+                                             :_parent)
+                                        :_routing
+                                        (->> (get-v1-document %)
+                                             :fields
+                                             :_routing))
+                                      initial-hits))]
+
+        (log/infof "Recurring bulk %s" (first initial-hits))
+        (bulk/bulk-with-index-and-type dest-cli (-> query-dsl :dest :index) type ops)
+        (recur query-dsl src-cli dest-cli scroll-id type))
+      )
+    )
+  )
 
 
 ;reindex a single type in a specific index to destination
@@ -49,28 +64,35 @@
   ;;create new mapping
 
   (let [src-cli (esr/connect (-> dsl :src :url))
-        src-seq (doc/scroll-seq src-cli (doc/search src-cli (-> dsl :src :index) type :query (q/match-all) :search_type "query_then_fetch" :scroll "1m" :size 1000
-                                            :fields ["_source", "_routing", "_parent"]))
-        dest-cli (esr/connect (-> dsl :dest :url))]
-    (log/infof "First Doc to migrate %s" (:_source (first src-seq)))
-    (log/debugf "Countted: %s" (count src-seq))
-    (if-not (nil? (first src-seq))
-      (binding [clojurewerkz.elastisch.rest/*endpoint* dest-cli]
-        (let [ops (bulk/bulk-index (map #(assoc
-                                          (:_source (get-v1-document %))
-                                          :_id
-                                          (:_id (get-v1-document %))
-                                          :_parent
-                                          (->> (get-v1-document %)
-                                               :fields
-                                               :_parent)
-                                          :_routing
-                                          (->> (get-v1-document %)
-                                               :fields
-                                               :_routing))
-                                        src-seq))]
-          (log/infof "First BULK OP to execute %s" (first ops))
-          (bulk/bulk-with-index-and-type dest-cli (-> dsl :dest :index) type ops))))))
+        response (doc/search src-cli (-> dsl :src :index) type :query (q/match-all) :search_type "query_then_fetch" :scroll "1m" :size 2000
+                                                    :fields ["_source", "_routing", "_parent"])
+        dest-cli (esr/connect (-> dsl :dest :url))
+        initial-hits (hits-from response)
+        scroll-id (:_scroll_id response)]
+    (log/infof "First Doc to migrate %s" (:_source (first initial-hits)))
+    (log/debugf "Countted: %s" (count initial-hits))
+    (if-not (nil? (first initial-hits))
+      (let [ops (bulk/bulk-index (map #(assoc
+                                        (:_source (get-v1-document %))
+                                        :_id
+                                        (:_id (get-v1-document %))
+                                        :_parent
+                                        (->> (get-v1-document %)
+                                             :fields
+                                             :_parent)
+                                        :_routing
+                                        (->> (get-v1-document %)
+                                             :fields
+                                             :_routing))
+                                      initial-hits))]
+
+        (log/infof "First BULK OP to execute %s" (first initial-hits))
+        (bulk/bulk-with-index-and-type dest-cli (-> dsl :dest :index) type ops)
+        (execute-bulk-with-scroll dsl src-cli  dest-cli   scroll-id type)
+        )
+      ))
+
+  )
 
 
 (defn get-src-index-mappings [dsl]
