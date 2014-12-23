@@ -1,4 +1,4 @@
-(ns nomad.es
+(ns esigrate.es
   (:require
     [clojurewerkz.elastisch.rest :as esr]
     [clojurewerkz.elastisch.rest.document :as doc]
@@ -7,8 +7,8 @@
     [clojurewerkz.elastisch.rest.index :as idx]
     [clojure.tools.logging :as log]
     :reload-all)
-  (:use nomad.common
-        nomad.upgrade :reload-all))
+  (:use esigrate.common
+        esigrate.upgrade :reload-all))
 
 
 ;
@@ -104,9 +104,6 @@
         (:mappings index-mapping)
         index-mapping))))
 
-
-(defn get-src-type-mapping [dsl type]
-  (get (get-src-index-mappings dsl) (keyword type)))
 
 (defn exec-reindex-for-all-types! [dsl]
   ;get all types

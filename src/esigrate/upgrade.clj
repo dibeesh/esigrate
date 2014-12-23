@@ -1,5 +1,5 @@
-(ns nomad.upgrade
-  (:use nomad.common)
+(ns esigrate.upgrade
+  (:use esigrate.common)
   (:require [clojure.tools.logging :as log]
             [clojure.walk :as w]))
 

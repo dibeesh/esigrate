@@ -1,10 +1,11 @@
-(ns nomad.env
+(ns esigrate.env
+  (:import (java.io PushbackReader))
   (:require [clojure.java.io :as io]
             [clojure.tools.logging :as log]))
 
 (defn load-props [filename]
   (with-open [r (io/reader filename)]
-    (binding [*read-eval* false] (read (java.io.PushbackReader. r)))
+    (binding [*read-eval* false] (read (PushbackReader. r)))
     ))
 
 (defn log-exec [f]

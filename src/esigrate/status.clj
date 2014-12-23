@@ -1,6 +1,6 @@
-(ns nomad.status
+(ns esigrate.status
   (:require [clojure.core.async :as async :refer :all]
-            [nomad.es :as es])
+            [esigrate.es :as es])
   )
 
 (def queue (chan 50)) ;50 migrations max

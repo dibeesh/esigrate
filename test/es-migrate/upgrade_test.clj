@@ -1,9 +1,9 @@
-(ns nomad.upgrade-test
+(ns es-migrate.upgrade-test
   (:require [clojure.test :refer :all]
-            [nomad.core :refer :all]
+            [es-migrate.core :refer :all]
             [clojure.tools.logging :as log])
-  (:use nomad.upgrade
-        nomad.common))
+  (:use es-migrate.upgrade
+        es-migrate.common))
 
 
 (def dsl {:users

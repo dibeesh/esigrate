@@ -1,4 +1,4 @@
-(ns nomad.common)
+(ns esigrate.common)
 
 ;http://www.pitheringabout.com/?p=678
 (defn find-key [ks k m]
@@ -9,9 +9,6 @@
     (vector? m)
     (reduce into '() (map #(find-key (conj ks %1) k %2)
                           (iterate inc 0) m))))
-
-(defn deep-update-in [m k f]
-  (reduce #(update-in %1 %2 f) m (find-key [] k m)))
 
 (defn find-first-key [coll k]
   (get-in coll (first (find-key [] k coll))))

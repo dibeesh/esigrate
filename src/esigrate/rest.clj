@@ -1,16 +1,20 @@
-(ns nomad.rest
+(ns esigrate.rest
   (:use org.httpkit.server
-        nomad.status)
+        esigrate.status)
   (:require [compojure.core :refer [GET POST PUT DELETE defroutes routes]]
             [compojure.handler :as handler]
-            [nomad.env :as env]
+            [esigrate.env :as env]
             [clojure.data.json :as json]
-            [clojure.tools.logging :as log]
-            [nomad.es :as es]))
+            [clojure.tools.logging :as log]))
 
 
 
 (defroutes migration-routes
+
+           (GET ["/"] req
+                (with-channel req channel
+                              (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body (json/write-str {:status "esigrate is up"})})))
+
            (POST ["/migration"] req
                  ;start new migration with the specified dsl
                  ;returns a unique id to query the status
@@ -24,7 +28,8 @@
                 (with-channel req channel
                               (let [id (:id (:params req))
                                     response {:ok "migration ongoing"}]
-                                (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:response (get-status id)}})))))
+                                (send! channel {:status 200 :headers {"Content-Type" "text/plain"} :body {:response (get-status id)}}))))
+           )
 
 
 (def app

@@ -1,8 +1,8 @@
-(ns nomad.common-test
+(ns es-migrate.common-test
   (:require [clojure.test :refer :all]
-            [nomad.core :refer :all]
+            [es-migrate.core :refer :all]
             [clojure.tools.logging :as log])
-  (:use nomad.common))
+  (:use es-migrate.common))
 
 (deftest deep-keywordize-keys-test
   (testing "deep keywordize"

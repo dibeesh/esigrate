@@ -1,8 +1,8 @@
-(ns nomad.status-test
+(ns es-migrate.status-test
   (:require [clojure.test :refer :all]
-            [nomad.core :refer :all]
+            [es-migrate.core :refer :all]
             [clojure.tools.logging :as log])
-  (:use nomad.status))
+  (:use es-migrate.status))
 
 ;(def dsl1 (read-string (slurp "test-resources/migration1.edn")))
 ;

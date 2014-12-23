@@ -1,22 +1,29 @@
-# nomad
+# esigrate
 
-A Clojure application designed to Migrate/Copy pre 1.0 ElasticSearch indexes to latest version
-
-Post a json based structure similar to the following edn to start migration:
+A Clojure application designed to Migrate/Copy Elasticsearch indices, based on [Nomad](https://github.com/codemomentum/nomad)
 
 ##Usage
 
-    git clone https://github.com/codemomentum/nomad.git
-    cd nomad
-    lein run
+* Dowload Esigrate tar file from releases.
 
-you should now see a message like:
+* Ensure JAVA_HOME is set
 
-    INFO: Rest server started at port : 8080
+* Extract tar file tar -xzf esigrate...tar
+
+* cd esigrate...
+
+* Execute Esigrate via bin/launcher.sh start
+
+Esigrate starts at port 9090.
+
+To see esigrate is running;
+
+     curl -XGET http://localhost:9200
+
 
 now you can start a migration like the following:
 
-    curl -XPOST http://localhost:8080/migration -d '{
+    curl -XPOST http://localhost:9090/migration -d '{
             "id" :"001",
             "src": {
                 "url":   "http://localhost:9200/",
@@ -29,27 +36,43 @@ now you can start a migration like the following:
         }'
 
 
-Check status:
+Check status of a migrate job:
 
-    curl http://localhost:8080/migration/{id}
+    curl http://localhost:9090/migration/{id}
 
 possible responses can be queued,running,stopped
+
+
+To stop Esigrate;
+
+bin/launcher.sh stop
 
 ## Behaviour
 
 - wont index anything if src type is not successfully migrated to destination
 
+## Development
+
+    git clone https://github.com/codemomentum/es-migrate.git
+    cd es-migrate
+    lein run
 
 ##TODO
-- percolator
-- alias
 
-~~parent/child~~
-~~routing~~
+Migrate;
+
+- percolators
+- aliases
 
 ## License
 
-Copyright © 2014 FIXME
+Copyright 2015 www.searchly.com
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this work except in compliance with the License. You may obtain a copy of the License in the LICENSE file, or at:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and limitations under the License.
+
+
