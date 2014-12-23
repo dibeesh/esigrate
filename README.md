@@ -6,7 +6,7 @@ A Clojure application designed to Migrate/Copy Elasticsearch indices, based on [
 
 * Dowload Esigrate tar file from releases.
 
-* Ensure JAVA_HOME is set
+* Ensure java is installed and JAVA_HOME environment variable is set.
 
 * Extract tar file tar -xzf esigrate...tar
 
