@@ -1,4 +1,4 @@
-(defproject esigrate "0.1.0"
+(defproject esigrate "0.1.0-SNAPSHOT"
             :description "A Clojure application designed to Migrate/Copy Elasticsearch indices."
             :url "http://www.searchly.com"
             :license {:name "Apache License"
@@ -27,6 +27,5 @@
             :jvm-opts ["-Xmx1g" "-server"]
             :aot [esigrate.core] :main esigrate.core
             :tar {:uberjar true}
-            :uberjar-name "esigrate.jar",
-            :lein-release {:deploy-via :shell}
+            :uberjar-name "esigrate.jar"
             )
