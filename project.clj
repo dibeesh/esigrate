@@ -28,5 +28,5 @@
             :aot [esigrate.core] :main esigrate.core
             :tar {:uberjar true}
             :uberjar-name "esigrate.jar",
-            :lein-release {:deploy-via :clojars}
+            :lein-release {:deploy-via :shell}
             )
