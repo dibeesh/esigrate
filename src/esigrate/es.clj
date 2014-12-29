@@ -6,9 +6,9 @@
     [clojurewerkz.elastisch.rest.bulk :as bulk]
     [clojurewerkz.elastisch.rest.index :as idx]
     [clojure.tools.logging :as log]
+    [clojure.data.json :as json]
     :reload-all)
-  (:use esigrate.common
-        esigrate.upgrade :reload-all))
+  (:use esigrate.common :reload-all))
 
 
 ;
@@ -26,7 +26,7 @@
 
 ; Executes scroll and bulk
 (defn execute-bulk-with-scroll
-  [query-dsl src-cli dest-cli  scroll-id type]
+  [query-dsl src-cli dest-cli scroll-id type]
   (log/infof "Recurr called")
   (let [response (doc/scroll src-cli scroll-id :scroll "1m")
         initial-hits (hits-from response)
@@ -48,7 +48,7 @@
                                              :_routing))
                                       initial-hits))]
 
-        (log/infof "Recurring bulk %s" (first initial-hits))
+        (log/infof "Recurring bulk %s" (json/write-str (first initial-hits)))
         (bulk/bulk-with-index-and-type dest-cli (-> query-dsl :dest :index) type ops)
         (recur query-dsl src-cli dest-cli scroll-id type))
       )
@@ -65,7 +65,7 @@
 
   (let [src-cli (esr/connect (-> dsl :src :url))
         response (doc/search src-cli (-> dsl :src :index) type :query (q/match-all) :search_type "query_then_fetch" :scroll "1m" :size 2000
-                                                    :fields ["_source", "_routing", "_parent"])
+                             :fields ["_source", "_routing", "_parent"])
         dest-cli (esr/connect (-> dsl :dest :url))
         initial-hits (hits-from response)
         scroll-id (:_scroll_id response)]
@@ -86,9 +86,9 @@
                                              :_routing))
                                       initial-hits))]
 
-        (log/infof "First BULK OP to execute %s" (first initial-hits))
+        (log/infof "First BULK OP to execute %s" (json/write-str (first initial-hits)))
         (bulk/bulk-with-index-and-type dest-cli (-> dsl :dest :index) type ops)
-        (execute-bulk-with-scroll dsl src-cli  dest-cli   scroll-id type)
+        (execute-bulk-with-scroll dsl src-cli dest-cli scroll-id type)
         )
       ))
 
@@ -126,23 +126,12 @@
         (when-not (idx/exists? dest-cli (-> dsl :dest :index))
           (idx/create dest-cli (-> dsl :dest :index) :settings (deep-keywordize-keys safe-settings)))
 
-        (log/infof "Updating Mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type src-mapping)
-        (if (mapping-needs-upgrade? src-mapping)
-          ;;type needs upgrade, change dsl manually and push the new one
-          (let [up-mapping (upgrade-type src-mapping)]
-            (log/infof "Upgraded mapping because it contained multi type, Url %s type %s new-mapping %s"
-                       (-> dsl :dest :index) (name type) {(keyword type) up-mapping})
-            (let [upgrade-result (idx/update-mapping dest-cli (-> dsl :dest :index)
-                                                     (name type)
-                                                     :mapping
-                                                     {(keyword type) up-mapping}
-                                                     :ignore_conflicts false)]
-              (log/infof "UPGRADE RESULT %s " upgrade-result)))
-          ;;does not need upgrade, copy the type without modifications
-          (let [upgrade-result (idx/update-mapping dest-cli (-> dsl :dest :index) (name type) :mapping
-                                                   {(keyword type) src-mapping} :ignore_conflicts false)]
-            (log/infof "UPGRADE RESULT %s " upgrade-result)))
+        (log/infof "Creating mapping for index %s and type %s and mapping %s..." (-> dsl :dest :index) type (json/write-str src-mapping))
 
+        (let [upgrade-result (idx/update-mapping dest-cli (-> dsl :dest :index) (name type) :mapping
+                                                 {(keyword type) src-mapping} :ignore_conflicts false)]
+          (log/infof "Mapping create result %s " upgrade-result))
+        ;)
 
         (when
           (idx/type-exists? dest-cli (-> dsl :dest :index) (name type))
