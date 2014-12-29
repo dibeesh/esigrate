@@ -1,4 +1,4 @@
-(defproject esigrate "0.1.0-SNAPSHOT"
+(defproject esigrate "0.2.0-SNAPSHOT"
             :description "A Clojure application designed to Migrate/Copy Elasticsearch indices."
             :url "http://www.searchly.com"
             :license {:name "Apache License"
